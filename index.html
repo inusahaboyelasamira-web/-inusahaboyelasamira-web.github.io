@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7325587372830231" crossorigin="anonymous"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;background:#0f172a;color:white;font-family:Arial;text-align:center}
+#top{display:flex;justify-content:space-around;background:#1e293b;padding:8px;font-size:12px}
+#gameBox{width:360px;min-height:430px;background:white;color:#111;margin:10px auto;border-radius:18px;border:3px solid gold;padding:12px}
+.modeBtn{padding:7px 12px;margin:3px;border:none;border-radius:20px;font-weight:bold;font-size:11px}
+.wordBig{font-size:42px;letter-spacing:12px;margin:10px 0;font-weight:bold}
+.letterBtn{width:58px;height:58px;margin:5px;font-size:22px;border:2px solid #111;border-radius:12px;background:#ffeb3b;font-weight:bold;color:#111}
+.progress{width:100%;height:14px;background:#e2e8f0;border-radius:20px;overflow:hidden}
+#fill{height:100%;background:gold;width:0%;transition:0.3s}
+#adBox{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.93);z-index:20;justify-content:center;align-items:center;flex-direction:column;color:white;padding:20px}
+</style>
+</head>
+<body>
+<div id="top">
+<div>💰 $<span id="cash">0</span></div>
+<div>LVL <span id="lvl">1</span></div>
+<div>🏆 <span id="medals">0</span> Medals</div>
+</div>
+
+<div style="margin:6px">
+<button onclick="setMode('kids')" class="modeBtn" style="background:orange" id="btnKids">KIDS c_t</button>
+<button onclick="setMode('teen')" class="modeBtn" style="background:#00d0ff" id="btnTeen">TEEN SCRAMBLE</button>
+</div>
+
+<div id="gameBox">
+<h3 style="margin:4px">My Words 😉 - Level <span id="lvl2">1</span></h3>
+<div class="progress"><div id="fill"></div></div>
+<p style="margin:6px"><span id="count">0</span>/12 | Grade: <span id="grade">F</span> | <span id="medal" style="font-size:28px">🔰</span></p>
+
+<!-- LETTERS COME FIRST NOW -->
+<div id="letters" style="margin:10px 0"></div>
+
+<div id="hint" style="font-size:50px;margin-top:10px">🐱</div>
+<div id="wordDisplay" class="wordBig">C _ T</div>
+<p id="clue" style="color:#555;font-size:13px">Tap the correct letter above!</p>
+<p id="msg" style="font-weight:bold;font-size:16px">Tap a letter!</p>
+<button onclick="nextWord()" style="background:#111;color:white;padding:8px 16px;border:none;border-radius:20px;margin-top:8px">SKIP ➡️</button>
+</div>
+
+<div id="adBox">
+<div style="font-size:60px">🏆</div>
+<h2>Well done! Congratulations! 👏</h2>
+<p id="adResult" style="font-size:18px"></p>
+<h1>Bonus Ad +$8</h1>
+<button onclick="closeAd()" style="padding:12px 24px;background:gold;border:none;border-radius:20px;font-weight:bold;font-size:16px">NEXT LEVEL ➡️</button>
+</div>
+
+<script>
+let kidsPool=[
+ {word:"CAT",hint:"🐱",display:"C _ T",missing:"A",opts:["A","O","U"]},
+ {word:"DOG",hint:"🐶",display:"D _ G",missing:"O",opts:["O","A","E"]},
+ {word:"SUN",hint:"☀️",display:"S _ N",missing:"U",opts:["U","I","A"]},
+ {word:"BAG",hint:"👜",display:"B _ G",missing:"A",opts:["A","E","O"]},
+ {word:"PEN",hint:"🖊️",display:"P _ N",missing:"E",opts:["E","A","I"]},
+ {word:"CUP",hint:"☕",display:"C _ P",missing:"U",opts:["U","O","A"]},
+ {word:"HAT",hint:"🎩",display:"H _ T",missing:"A",opts:["A","E","O"]},
+ {word:"BED",hint:"🛏️",display:"B _ D",missing:"E",opts:["E","A","U"]},
+ {word:"FISH",hint:"🐟",display:"F _ SH",missing:"I",opts:["I","A","O"]},
+ {word:"BOOK",hint:"📚",display:"B _ OK",missing:"O",opts:["O","A","U"]},
+ {word:"STAR",hint:"⭐",display:"ST _ R",missing:"A",opts:["A","O","E"]},
+ {word:"CAKE",hint:"🎂",display:"C _ KE",missing:"A",opts:["A","E","I"]},
+ {word:"MILK",hint:"🥛",display:"M _ LK",missing:"I",opts:["I","A","O"]},
+ {word:"LION",hint:"🦁",display:"L _ ON",missing:"I",opts:["I","O","A"]},
+ {word:"DUCK",hint:"🦆",display:"D _ CK",missing:"U",opts:["U","A","O"]}
+];
+let teenPool=[
+ {word:"APPLE",hint:"🍎",scrambled:"ELPPA"},
+ {word:"GHANA",hint:"🇬🇭",scrambled:"AHANG"},
+ {word:"SCHOOL",hint:"🏫",scrambled:"LOOHCS"},
+ {word:"ORANGE",hint:"🍊",scrambled:"NAREGO"},
+ {word:"FAMILY",hint:"👨‍👩‍👧",scrambled:"ILYMAF"},
+ {word:"FRIEND",hint:"🤝",scrambled:"DNEIRF"},
+ {word:"GIRAFFE",hint:"🦒",scrambled:"EFFARIG"},
+ {word:"KITCHEN",hint:"🍳",scrambled:"NEHCTIK"},
+ {word:"LIBRARY",hint:"📚",scrambled:"YRARBIL"},
+ {word:"MONKEY",hint:"🐒",scrambled:"YEKNOM"},
+ {word:"PLANET",hint:"🌍",scrambled:"TENALP"},
+ {word:"BOTTLE",hint:"🍶",scrambled:"TELTOB"},
+ {word:"MOTHER",hint:"👩",scrambled:"REHTOM"},
+ {word:"PUZZLE",hint:"🧩",scrambled:"ELZZUP"}
+];
+
+let mode='kids', level=1, wordsPerLevel=12, count=0, correct=0, money=0, medals=0, currentIdx=0, wordList=[];
+
+function setMode(m){ mode=m; level=1; wordsPerLevel=12; startLevel(); 
+ btnKids.style.border=m=='kids'?"3px solid gold":"none"; 
+ btnTeen.style.border=m=='teen'?"3px solid gold":"none"; }
+function shuffle(a){ return a.sort(()=>Math.random()-0.5); }
+
+function startLevel(){
+ count=0; correct=0; currentIdx=0;
+ let pool=mode=='kids'? [...kidsPool]:[...teenPool]; shuffle(pool);
+ wordList=pool.slice(0,wordsPerLevel);
+ lvl.innerText=level; lvl2.innerText=level; updateProgress(); loadWord();
+}
+function updateProgress(){
+ let pct=(count/wordsPerLevel)*100; fill.style.width=pct+"%";
+ document.getElementById("count").innerText=count;
+ let acc=count==0?0:(correct/count)*100; let g="F", med="🔰";
+ if(acc>=90){ g="A+"; med="🏆"; } else if(acc>=80){ g="A"; med="🥇"; } else if(acc>=65){ g="B"; med="🥈"; } else if(acc>=50){ g="C"; med="🥉"; }
+ grade.innerText=g; medal.innerText=med;
+}
+function loadWord(){
+ if(count>=wordsPerLevel){ winLevel(); return; }
+ let w=wordList[currentIdx%wordList.length];
+ let lettersDiv=document.getElementById("letters"); lettersDiv.innerHTML=""; msg.innerText="Tap a letter!"; msg.style.color="#111";
+ hint.innerText=w.hint;
+ if(mode=='kids'){
+  wordDisplay.innerText=w.display; clue.innerText="Level "+level+" - Fill: "+w.display;
+  shuffle([...w.opts]).forEach(l=>{
+   let b=document.createElement("button"); b.className="letterBtn"; b.innerText=l;
+   b.onclick=()=>{
+    if(l==w.missing){ correct++; msg.innerText="✅ "+w.word+" Correct! +$2"; msg.style.color="green"; money+=2; }
+    else{ msg.innerText="❌ Wrong! It's "+w.word; msg.style.color="red"; }
+    count++; currentIdx++; updateProgress(); cash.innerText=money; setTimeout(loadWord,900);
+   }; lettersDiv.appendChild(b);
+  });
+ } else {
+  clue.innerText="Unscramble: "+w.scrambled; wordDisplay.innerText="_ ".repeat(w.word.length); let built="";
+  shuffle(w.scrambled.split("")).forEach(l=>{
+   let b=document.createElement("button"); b.className="letterBtn"; b.innerText=l; b.style.background="#00d0ff";
+   b.onclick=()=>{
+    built+=l; wordDisplay.innerText=built+" _".repeat(w.word.length-built.length); b.disabled=true; b.style.opacity="0.3";
+    if(built.length==w.word.length){
+     if(built==w.word){ correct++; msg.innerText="✅ "+w.word+" Correct! +$3"; msg.style.color="green"; money+=3; }
+     else{ msg.innerText="❌ Answer: "+w.word; msg.style.color="red"; }
+     count++; currentIdx++; updateProgress(); cash.innerText=money; setTimeout(loadWord,900);
+    }
+   }; lettersDiv.appendChild(b);
+  });
+ }
+}
+function nextWord(){ count++; currentIdx++; updateProgress(); loadWord(); }
+function winLevel(){
+ let acc=Math.round((correct/wordsPerLevel)*100); let gradeTxt=grade.innerText; let medalEmoji=medal.innerText;
+ adResult.innerHTML=`You got ${correct}/${wordsPerLevel} = ${acc}%<br>Grade: <b>${gradeTxt}</b> ${medalEmoji}<br>Level ${level} done!`;
+ adBox.style.display="flex";
+}
+function closeAd(){
+ adBox.style.display="none"; money+=8; medals++; document.getElementById("medals").innerText=medals;
+ level++; wordsPerLevel=12+(level-1)*2; cash.innerText=money; startLevel();
+}
+setMode('kids');
+</script>
+</body>
+</html>
